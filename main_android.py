@@ -18,7 +18,7 @@ except Exception:
 # ---------------------
 # CONFIG
 # ---------------------
-APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"  # <-- thay URL Apps Script Web App của bạn
+APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyM7xJX2FwhxprHLoGvux_0aempcN5FcUMCZXW-MBUpicotFvtVrzb2HmgP9tg6li6yTw/exec"  # <-- thay URL Apps Script Web App của bạn
 
 KV = '''
 BoxLayout:
