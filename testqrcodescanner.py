@@ -38,7 +38,7 @@ except Exception:
 # If you deploy a Google Apps Script Web App that accepts POST and appends to your Sheet,
 # put its URL here. This is recommended for mobile (APK) because shipping Service Account
 # credentials in an APK is not secure.
-APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby_za4FRHbpOwwZiJ3oQF2ukc7qaANu9HgjzHwVkairLIUMPyZe2ZH105Ahij1M-qPuNQ/exec"  # <-- Thay URL của bạn
+APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxJ-94AKC8vjScOPhPRr3_4_nUfG7m8o0LmLWbSz24Vd2FcAPxFwgSeJqtOg8n2z3V8tw/exec"  # <-- Thay URL của bạn
 
 # If you want to use gspread (service account) directly (desktop use), set to True and
 # place credentials.json next to the app. NOTE: Not recommended for public APKs.
@@ -111,7 +111,7 @@ BoxLayout:
 
 ticked = set() 
 
-# ---------------------
+# --------------------- 
 # Helper functions
 # ---------------------
 
@@ -134,7 +134,7 @@ class QRAttendanceApp(App):
     pyzbar_available = BooleanProperty(OPENCV_AVAILABLE)
 
     def build(self):
-        self.title = "QR Attendance Demo"
+        self.title = "QR Attendance"
         self.capture = None
         self.camera_thread = None
         self._stop_event = threading.Event()
@@ -252,10 +252,12 @@ class QRAttendanceApp(App):
     def send_record_to_sheet(self, record: dict):
         # Try Apps Script first
         if APPS_SCRIPT_WEBHOOK_URL and APPS_SCRIPT_WEBHOOK_URL.startswith('https') and REQUESTS_AVAILABLE:
+            rawData = record.get('data', '')
+            idOnly = rawData.split(' - ')[0]
+
             try:
                 payload = {
-                    'id': record.get('data'),
-                    'timestamp': record.get('timestamp')
+                    'id': idOnly
                 }
                 # gửi dạng form-data, không phải JSON
                 r = requests.post(
@@ -264,7 +266,7 @@ class QRAttendanceApp(App):
                     timeout=8
                 )
                 if r.status_code == 200:
-                    self.log('Điểm danh thành công:', r.text)
+                    self.log('Điểm danh thành công')
                     return True
                 else:
                     self.log('Apps Script trả mã', r.status_code, r.text)
