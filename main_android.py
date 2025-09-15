@@ -18,7 +18,7 @@ except Exception:
 # ---------------------
 # CONFIG
 # ---------------------
-APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyM7xJX2FwhxprHLoGvux_0aempcN5FcUMCZXW-MBUpicotFvtVrzb2HmgP9tg6li6yTw/exec"  # <-- thay URL Apps Script Web App của bạn
+APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz293pXol0nxj73B2wo1eeJR6X5JvEPasW4k55Y9SnnlEAUQh9bOlMe-03qVdUtn1Si6Q/exec"  # <-- thay URL Apps Script Web App của bạn
 
 KV = '''
 BoxLayout:
@@ -59,13 +59,19 @@ BoxLayout:
             halign: 'left'
 '''
 
+ticked = set()  # tránh quét trùng
+
 # ---------------------
 # Main App
 # ---------------------
 class QRAndroidApp(App):
     last_data = StringProperty('')
     log_text = StringProperty('')
-    ticked = set()   # tránh quét trùng
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.scanning = False   # thêm dòng này để tránh lỗi
+
 
     def build(self):
         from kivy_garden.zbarcam import ZBarCam  # import ở đây để chắc chắn có garden
@@ -76,35 +82,41 @@ class QRAndroidApp(App):
         t = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         line = f"[{t}] " + ' '.join(str(p) for p in parts)
         print(line)
-        # append cuối log
-        self.log_text = self.log_text + '\n' + line if self.log_text else line
+        self.log_text = line + '\n' + self.log_text
 
     def on_symbols(self, instance, symbols):
         """Hàm callback khi ZBarCam phát hiện QR code"""
-        if not symbols:
+        if not symbols or self.scanning:
             return
-        data_str = symbols[0].data.decode("utf-8")
-        if data_str in self.ticked:
-            self.log(f"ID {data_str} đã quét rồi, bỏ qua")
-            return
-        self.ticked.add(data_str)
 
-        now = datetime.now()
-        record = {
-            "id": data_str,
-            "timestamp": now.isoformat(),
-            "day": now.strftime("%d-%m")  # để Apps Script dễ xử lý cột ngày
-        }
-        self.last_data = f"{record['id']} ({record['day']})"
-        self.log(f"Đã quét: {record['id']}")
-        threading.Thread(target=self.send_record_to_sheet, args=(record,), daemon=True).start()
+        data_str = symbols[0].data.decode("utf-8").strip()
+        if not data_str:
+            return
+
+        self.scanning = True  # khóa quét trong lúc xử lý
+
+        if data_str in ticked:
+            self.log(f"ID {data_str} đã quét rồi, bỏ qua")
+        else:
+            ticked.add(data_str)
+            parts = data_str.split()
+            idOnly = parts[0] if parts else data_str
+            record = {"id": idOnly}
+
+            self.last_data = record["id"]
+            self.log(f"Đã quét: {data_str}")
+            threading.Thread(target=self.send_record_to_sheet, args=(record,), daemon=True).start()
+
+        # mở khóa sau 2 giây (có thể chỉnh)
+        from kivy.clock import Clock
+        Clock.schedule_once(lambda dt: setattr(self, "scanning", False), 2)
 
     def send_record_to_sheet(self, record: dict):
         if APPS_SCRIPT_WEBHOOK_URL and REQUESTS_AVAILABLE:
             try:
                 r = requests.post(APPS_SCRIPT_WEBHOOK_URL, data=record, timeout=8)
                 if r.status_code == 200:
-                    self.log("Gửi thành công:", r.text)
+                    self.log("Gửi thành công")
                     return True
                 else:
                     self.log("Apps Script trả mã", r.status_code, r.text)

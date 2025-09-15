@@ -38,7 +38,7 @@ except Exception:
 # If you deploy a Google Apps Script Web App that accepts POST and appends to your Sheet,
 # put its URL here. This is recommended for mobile (APK) because shipping Service Account
 # credentials in an APK is not secure.
-APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyM7xJX2FwhxprHLoGvux_0aempcN5FcUMCZXW-MBUpicotFvtVrzb2HmgP9tg6li6yTw/exec"  # <-- Thay URL của bạn
+APPS_SCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz293pXol0nxj73B2wo1eeJR6X5JvEPasW4k55Y9SnnlEAUQh9bOlMe-03qVdUtn1Si6Q/exec"  # <-- Thay URL của bạn
 
 # If you want to use gspread (service account) directly (desktop use), set to True and
 # place credentials.json next to the app. NOTE: Not recommended for public APKs.
